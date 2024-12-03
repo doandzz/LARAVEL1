@@ -3,7 +3,7 @@ services:
     web:
         image: nginx:latest
         ports:
-            - "82:80"
+            - "81:80"
         restart: always    
         volumes:
             - ./nginx/default.conf:/etc/nginx/conf.d/nginx.conf
@@ -15,9 +15,30 @@ services:
         build:
             context: .
             dockerfile: PHP.Dockerfile
+        depends_on:
+          - mysql
         restart: always    
         volumes:
             - ./laravel:/var/www/html
             - ./nginx/php.ini:/usr/local/etc/php/php.ini
             - /home/asi/deployment/ssc/images:/var/www/html/public/images
             - /home/asi/deployment/ssc/images:/var/www/html/storage/app/public/images
+    mysql:
+        image: mysql:8.0
+        container_name: mysql_container_ssc
+        restart: always
+        ports:
+            - "3307:3306"
+        environment:
+            MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+            # MYSQL_DATABASE: ${MYSQL_DATABASE}
+            MYSQL_USER: ${MYSQL_USER}
+            MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+            TZ: Asia/Ho_Chi_Minh
+        volumes:
+            - mysql_data:/var/lib/mysql
+            - ./nginx/scripts:/docker-entrypoint-initdb.d
+            - ./nginx/my.cnf:/etc/my.cnf 
+    
+volumes:
+    mysql_data:
