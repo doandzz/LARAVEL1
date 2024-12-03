@@ -1,0 +1,23 @@
+version: '3'
+services:
+    web:
+        image: nginx:latest
+        ports:
+            - "82:80"
+        restart: always    
+        volumes:
+            - ./nginx/default.conf:/etc/nginx/conf.d/nginx.conf
+            - ./laravel:/var/www/html
+            - ./log:/var/log/nginx
+            - /home/asi/deployment/ssc/images:/var/www/html/public/images
+            - /home/asi/deployment/ssc/images:/var/www/html/storage/app/public/images
+    php:
+        build:
+            context: .
+            dockerfile: PHP.Dockerfile
+        restart: always    
+        volumes:
+            - ./laravel:/var/www/html
+            - ./nginx/php.ini:/usr/local/etc/php/php.ini
+            - /home/asi/deployment/ssc/images:/var/www/html/public/images
+            - /home/asi/deployment/ssc/images:/var/www/html/storage/app/public/images
