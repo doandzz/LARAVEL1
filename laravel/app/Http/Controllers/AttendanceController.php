@@ -13,8 +13,8 @@ use Illuminate\Support\Facades\Gate;
 
 class AttendanceController extends Controller
 {
-    private function getClassData($className, $statusAttendance, $startOfDay, $endOfDay)
-    {   
+    private function getClassData($className, $class_size, $statusAttendance, $startOfDay, $endOfDay)
+    {
 
         return Classes::where('name', 'LIKE', $className)
             ->when($statusAttendance != 0, function ($query) use ($statusAttendance, $startOfDay, $endOfDay) {
@@ -24,6 +24,23 @@ class AttendanceController extends Controller
                     });
                 } elseif ($statusAttendance == 2) {
                     $query->whereDoesntHave('confirmed_attendance');
+                }
+            })
+            ->when($class_size != 0, function ($query) use ($class_size, $startOfDay, $endOfDay) {
+                $query->withCount([
+                    'students',
+                    'students as students_attended_count' => function ($query) use ($startOfDay, $endOfDay) {
+                        $query->whereHas('attendances', function ($query) use ($startOfDay, $endOfDay) {
+                            $query->whereBetween('time_in', [$startOfDay, $endOfDay])
+                                ->groupBy('student_identification_code');
+                        });
+                    }
+                ]);
+
+                if ($class_size == 1) {
+                    $query->havingRaw('students_count = students_attended_count');
+                } elseif ($class_size == 2) {
+                    $query->havingRaw('students_count > students_attended_count');
                 }
             })
             ->withCount([
@@ -56,6 +73,7 @@ class AttendanceController extends Controller
             $startOfDay = $currentDate->copy()->startOfDay();
             $endOfDay = $currentDate->copy()->endOfDay();
             $statusAttendance = $request->get('status_attendance', 0);
+            $class_size = $request->get('class_size', 0);
 
             $classes = Classes::where('teacher_id', $user->teacher->id)
                 ->when($statusAttendance != 0, function ($query) use ($statusAttendance, $startOfDay, $endOfDay) {
@@ -65,6 +83,23 @@ class AttendanceController extends Controller
                         });
                     } elseif ($statusAttendance == 2) {
                         $query->whereDoesntHave('confirmed_attendance');
+                    }
+                })
+                ->when($class_size != 0, function ($query) use ($class_size, $startOfDay, $endOfDay) {
+                    $query->withCount([
+                        'students',
+                        'students as students_attended_count' => function ($query) use ($startOfDay, $endOfDay) {
+                            $query->whereHas('attendances', function ($query) use ($startOfDay, $endOfDay) {
+                                $query->whereBetween('time_in', [$startOfDay, $endOfDay])
+                                    ->groupBy('student_identification_code');
+                            });
+                        }
+                    ]);
+
+                    if ($class_size == 1) {
+                        $query->havingRaw('students_count = students_attended_count');
+                    } elseif ($class_size == 2) {
+                        $query->havingRaw('students_count > students_attended_count');
                     }
                 })
                 ->withCount([
@@ -87,7 +122,8 @@ class AttendanceController extends Controller
                 'currentDate' => $currentDate,
                 'classes' => $classes,
                 'is_teacher' => $is_teacher,
-                'statusAttendance' => $statusAttendance
+                'statusAttendance' => $statusAttendance,
+                'class_size' => $class_size
             ]);
         }
 
@@ -101,12 +137,13 @@ class AttendanceController extends Controller
         $startOfDay = $currentDate->copy()->startOfDay();
         $endOfDay = $currentDate->copy()->endOfDay();
         $statusAttendance = $request->get('status_attendance', 0);
+        $class_size = $request->get('class_size', 0);
 
-        $grade_1 = $this->getClassData('1%', $statusAttendance, $startOfDay, $endOfDay);
-        $grade_2 = $this->getClassData('2%', $statusAttendance, $startOfDay, $endOfDay);
-        $grade_3 = $this->getClassData('3%', $statusAttendance, $startOfDay, $endOfDay);
-        $grade_4 = $this->getClassData('4%', $statusAttendance, $startOfDay, $endOfDay);
-        $grade_5 = $this->getClassData('5%', $statusAttendance, $startOfDay, $endOfDay);
+        $grade_1 = $this->getClassData('1%', $class_size, $statusAttendance, $startOfDay, $endOfDay);
+        $grade_2 = $this->getClassData('2%', $class_size, $statusAttendance, $startOfDay, $endOfDay);
+        $grade_3 = $this->getClassData('3%', $class_size, $statusAttendance, $startOfDay, $endOfDay);
+        $grade_4 = $this->getClassData('4%', $class_size, $statusAttendance, $startOfDay, $endOfDay);
+        $grade_5 = $this->getClassData('5%', $class_size, $statusAttendance, $startOfDay, $endOfDay);
         $is_teacher = false;
 
         return view('attendance.list', [
@@ -117,7 +154,8 @@ class AttendanceController extends Controller
             'grade_2' => $grade_2,
             'grade_1' => $grade_1,
             'is_teacher' => $is_teacher,
-            'statusAttendance' => $statusAttendance
+            'statusAttendance' => $statusAttendance,
+            'class_size' => $class_size
         ]);
     }
     public function view_detail(Classes $class, $currentDate)
@@ -208,30 +246,57 @@ class AttendanceController extends Controller
             'currentDate' => $currentDate->format('Y-m-d')
         ]);
     }
-    public function confirmed_attendance(Classes $class, $currentDate, Request $request)
+    public function confirmed_attendance(Classes $class, Request $request)
     {
-        $currentDate = Carbon::createFromFormat('Y-m-d', $currentDate);
-        $startOfDay = $currentDate->copy()->startOfDay();
-        $endOfDay = $currentDate->copy()->endOfDay();
-        $day_name = $currentDate->locale('en')->dayName;
-
-        $setting_time = Settings_time::where('day', 'LIKE', $day_name)->first();
-
-        $confirmed_attendance = new Confirmed_attendance();
-
         $userId = Auth::id();
+        try {
+            $attendanceData = $request->input('attendance');
 
-        $confirmed_attendance->user_id = $userId;
-        $confirmed_attendance->class_id = $class->id;
-        $confirmed_attendance->confirmation_time = Carbon::now()->setTimezone('Asia/Ho_Chi_Minh');
+            foreach ($attendanceData as $data) {
+                if (str_starts_with($data['identifier'], 'new-')) {
+                    $attendance = new Attendance();
 
-        $confirmed_attendance->save();
+                    $time_In = $data['time_in'] ?? null;
+                    if ($time_In) {
+                        $now = Carbon::now()->setTimezone('Asia/Ho_Chi_Minh')->format('Y-m-d');
+                        $time_In = Carbon::createFromFormat('Y-m-d H:i', $now . ' ' . $time_In);
+                    }
+                    $attendance->student_id = $data['student_id'];
+                    $attendance->class_id = $class->id;
+                    $attendance->time_in = $time_In;
+                    $attendance->user_id = $userId;
+                    $attendance->type = 0;
+                    $attendance->status = $data['status'];
+                    $attendance->save();
+                } else {
+                    $attendance = Attendance::find($data['identifier']);
 
-        session()->flash('success', 'Điểm danh đã được xác nhận!');
+                    if ($attendance) {
+                        $time_In = $data['time_in'] ?? null;
+                        if ($time_In) {
+                            $now = Carbon::now()->setTimezone('Asia/Ho_Chi_Minh')->format('Y-m-d');
+                            $time_In = Carbon::createFromFormat('Y-m-d H:i', $now . ' ' . $time_In);
+                        }
+                        $attendance->status = $data['status'];
+                        $attendance->user_id = $userId;
+                        $attendance->time_in = $time_In;
+                        $attendance->save();
+                    }
+                }
+            }
 
-        return redirect()->route('management-attendances.view_detail', [
-            'class' => $class,
-            'currentDate' => $currentDate->format('Y-m-d')
-        ]);
+            $confirmed_attendance = new Confirmed_attendance();
+
+            $confirmed_attendance->user_id = $userId;
+            $confirmed_attendance->class_id = $class->id;
+            $confirmed_attendance->confirmation_time = Carbon::now()->setTimezone('Asia/Ho_Chi_Minh');
+
+            $confirmed_attendance->save();
+            session()->flash('success', 'Điểm danh đã được xác nhận!');
+
+            return response()->json(['success' => true, 'message' => 'Đã xác nhận']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Xác nhận lỗi'], 500);
+        }
     }
 }

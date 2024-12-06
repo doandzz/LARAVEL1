@@ -102,7 +102,7 @@ class StudentController extends Controller
         if ($request->hasFile('student_face_url')) {
             // Save the new image to the public/images folder
             $image = $request->file('student_face_url');
-            $filename =  $student->student_code . '_' . 0 . ".png";
+            $filename =  $student->student_identification_code . '_' . 0 . ".png";
             $image->storeAs('images', $filename, 'public');
 
             $student->student_face_url = $filename;  //Save image path in DB
@@ -145,7 +145,7 @@ class StudentController extends Controller
 
             // Save the new image to the public/images folder
             $image = $request->file('student_face_url');
-            $filename = $student->student_code . '_' . 0 . ".png";
+            $filename = $student->student_identification_code . '_' . 0 . ".png";
             $image->storeAs('images', $filename, 'public');
 
             $student->student_face_url = $filename;  //Save image path in DB

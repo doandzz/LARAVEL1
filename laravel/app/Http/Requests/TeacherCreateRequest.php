@@ -29,8 +29,7 @@ class TeacherCreateRequest extends FormRequest
         $tenant = Tenant::find($user->tenant_id);
         $table = $tenant->code.'_teachers';
         return [
-            'identification_code' => ['required','regex:/^[a-zA-Z0-9_]{8,12}$/',Rule::unique($table, 'identification_code'),],
-            'teacher_code' => ['required','regex:/^[a-zA-Z0-9_]{8,12}$/',Rule::unique($table, 'teacher_code'),],
+            'identification_code' => ['required','regex:/^[0-9]{12}$/',Rule::unique($table, 'identification_code'),],
             'password' => 'required|regex:/^\S{8,16}$/',
             'confirm_password' =>'required|same:password',
             'full_name' => 'required|regex:/^[a-zA-ZÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠàáâãèéêìíòóôõùúăđĩũơỲỴÝỶỸỳỵýỷỹỤụƯưĂăẰằẮắẲẳẴẵẶặẸẹẺẻẼẽỀềẾếỂểỄễỆệỈỉỊịỌọỎỏỎỏỐốỒồỔổỖỗỘộỚớỜờỞởỠỡỢợỤụỦủỨứỪừỬửỮữỰự\s]+$/',
@@ -50,11 +49,8 @@ class TeacherCreateRequest extends FormRequest
     {
         return [
             'identification_code.required' => 'Vui lòng nhập mã định danh giáo viên!',
-            'identification_code.regex' => 'Mã định danh phải từ 8-12 ký tự, chỉ bao gồm chữ cái, số và dấu gạch dưới (_)!',
+            'identification_code.regex' => 'Mã định danh phải đủ 12 số!',
             'identification_code.unique' => 'Mã định danh giáo viên đã tồn tại!',
-            'teacher_code.required' => 'Vui lòng nhập mã giáo viên!',
-            'teacher_code.regex' => 'Mã giáo viên phải từ 8-12 ký tự, chỉ bao gồm chữ cái, số và dấu gạch dưới (_)!',
-            'teacher_code.unique' => 'Mã giáo viên đã tồn tại!',
             'password.required' => 'Vui lòng nhập mật khẩu!',
             'password.regex' => 'Mật khẩu phải từ 8-16 ký tự và không chứa khoảng trắng!',
             'confirm_password.required' => 'Vui lòng xác nhận mật khẩu!',

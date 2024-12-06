@@ -6,24 +6,24 @@
     <div class="page-header py-3 flex-shrink-0">
         <div class="container-fluid">
             <div class="row align-items-end">
-                <div class="col-lg-6">
+                <div class="col-lg-5">
                     <h3 class="mb-0">Bảng điểm danh {{ $currentDate->locale('vi')->dayName }}, {{ $currentDate->day }}
                         tháng {{ $currentDate->month }}/{{ $currentDate->year }}</h3>
                 </div>
-                <div class="col-lg-6">
+                <div class="col-lg-7">
                     <form action="{{ route('management-attendances.list') }}" method="get">
                         @csrf
                         <div class="d-flex align-items-center ms-auto">
-                            <select class="form-select form-select-sm" style="width: 70%;" name="">
-                                <option value="0" >Tất cả
+                            <select class="form-select form-select-sm" style="width: 70%;" name="class_size">
+                                <option value="0" @if ($class_size == 0) selected @endif>Trạng thái điểm danh
                                 </option>
-                                <option value="1">Điểm danh đủ
+                                <option value="1" @if ($class_size == 1) selected @endif>Điểm danh đủ
                                 </option>
-                                <option value="2">Điểm danh thiếu
+                                <option value="2" @if ($class_size == 2) selected @endif>Điểm danh thiếu
                                 </option>
                             </select>
                             <select class="form-select form-select-sm ms-2" style="width: 70%;" name="status_attendance">
-                                <option value="0" @if ($statusAttendance == 0) selected @endif>Chọn trạng thái
+                                <option value="0" @if ($statusAttendance == 0) selected @endif>Trạng thái xác nhận
                                 </option>
                                 <option value="1" @if ($statusAttendance == 1) selected @endif>Đã xác nhận
                                 </option>

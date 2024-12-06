@@ -41,13 +41,13 @@
                                     <div class="col-sm-4">
                                         <span class="opacity-50">Loại tài khoản</span>
                                     </div>
-                                    <div class="col-sm-8">{{ $user->role === 1 ? 'Quản lý' : 'Giáo viên' }}</div>
+                                    <div class="col-sm-8">{{ $user->role === 1 ? 'Quản trị trường' : 'Giáo viên' }}</div>
                                 </div>
                                 <div class="row mb-2">
                                     <div class="col-sm-4">
                                         <span class="opacity-50">Quản lý điểm danh</span>
                                     </div>
-                                    <div class="col-sm-8">Lớp {{ $class_name }}</div>
+                                    <div class="col-sm-8"> {{ $user->role === 1 ? 'Tất cả' : 'Lớp'.$class_name }}</div>
                                 </div>
                                 <div class="row mb-2">
                                     <div class="col-sm-4">

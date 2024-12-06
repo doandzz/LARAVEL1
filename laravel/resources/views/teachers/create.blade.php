@@ -39,30 +39,15 @@
                                         <div class="col-md-8  order-2 order-md-1">
                                             <div class="mb-4">
                                                 <h6 class="text-uppercase text-primary">Thông tin hệ thống</h6>
-                                                <div class="row gx-2">
-                                                    <div class="col-6">
-                                                        <div class="mb-2">
-                                                            <label class="d-block opacity-50 mb-0">Mã định danh GV</label>
-                                                            <input type="text" class="form-control"
-                                                                value="{{ old('identification_code') }}"
-                                                                name="identification_code"
-                                                                placeholder="Nhập mã định danh giáo viên">
-                                                            @error('identification_code')
-                                                                <div class="text-danger">{{ $message }}</div>
-                                                            @enderror
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-6">
-                                                        <div class="mb-2">
-                                                            <label class="d-block opacity-50 mb-0">Mã GV</label>
-                                                            <input type="text" name="teacher_code" class="form-control"
-                                                                value="{{ old('teacher_code') }}"
-                                                                placeholder="Nhập mã giáo viên">
-                                                            @error('teacher_code')
-                                                                <div class="text-danger">{{ $message }}</div>
-                                                            @enderror
-                                                        </div>
-                                                    </div>
+                                                <div class="mb-2">
+                                                    <label class="d-block opacity-50 mb-0">Mã định danh GV</label>
+                                                    <input type="text" class="form-control"
+                                                        value="{{ old('identification_code') }}"
+                                                        name="identification_code"
+                                                        placeholder="Nhập mã định danh giáo viên">
+                                                    @error('identification_code')
+                                                        <div class="text-danger">{{ $message }}</div>
+                                                    @enderror
                                                 </div>
                                                 <div class="mb-2">
                                                     <label class="d-block opacity-50 mb-0">Mật khẩu</label>

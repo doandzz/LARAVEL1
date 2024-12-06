@@ -28,7 +28,7 @@
                                 method="POST">
                                 @csrf
                                 @if (isset($class))
-                                    @method('PUT') <!-- Sử dụng PUT cho chỉnh sửa -->
+                                    @method('PUT')
                                 @endif
                                 <div class="card-header border-bottom-0">
                                     <h6 class="card-title mb-0">{{ isset($class) ? 'Sửa lớp học' : 'Thêm mới' }}</h5>

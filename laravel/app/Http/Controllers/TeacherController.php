@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Carbon\Carbon;
 use App\Http\Requests\TeacherEditRequest;
 use App\Http\Requests\TeacherCreateRequest;
+use Illuminate\Support\Facades\Auth;
 
 class TeacherController extends Controller
 {
@@ -47,6 +48,8 @@ class TeacherController extends Controller
         $user = new User;
         $validateData = $request -> validated();
         $roleAdmin = (int) $request->input('roleAdmin', 0);
+        $user_login = Auth::user();
+
         
         $user -> role = $roleAdmin;
         $user -> user_name = $validateData['identification_code'];
@@ -55,15 +58,15 @@ class TeacherController extends Controller
         $user -> phone = $validateData['phone'];
         $user -> email = $validateData['email'];
         $user -> status = 1;
+        $user -> tenant_id = $user_login -> tenant_id;
 
         $user -> save();
 
         $teacher = new Teacher();
 
-        $newUser = User::where('identification_code',$validateData['identification_code'])->first();
+        $newUser = User::where('user_name',$validateData['identification_code'])->first();
 
         $teacher -> identification_code = $validateData['identification_code'];
-        $teacher -> teacher_code = $validateData['teacher_code'];
         $teacher -> full_name = $validateData['full_name'];
         $teacher -> birth_date = $validateData['birth_date'];
         $teacher -> phone = $validateData['phone'];
@@ -76,7 +79,7 @@ class TeacherController extends Controller
         if ($request->hasFile('face_url')) {
             // Save the new image to the public/images folder
             $image = $request->file('face_url');
-            $filename = $teacher-> teacher_code . '_' . 0 .".png";
+            $filename = $teacher-> identification_code . '_' . 0 .".png";
             $image->storeAs('images', $filename, 'public');
             
             $teacher->face_url = $filename;  //Save image path in DB
@@ -103,7 +106,6 @@ class TeacherController extends Controller
             $user -> role = $roleAdmin;
         }
         $teacher -> identification_code = $validateData['identification_code'];
-        $teacher -> teacher_code = $validateData['teacher_code'];
         $teacher -> full_name = $validateData['full_name'];
         $teacher -> birth_date = $validateData['birth_date'];
         $teacher -> email = $validateData['email'];
@@ -120,7 +122,7 @@ class TeacherController extends Controller
         
             // Save the new image to the public/images folder
             $image = $request->file('face_url');
-            $filename = $teacher-> teacher_code . '_' . 0 .".png";
+            $filename = $teacher-> identification_code . '_' . 0 .".png";
             $image->storeAs('images', $filename, 'public');
             
             $teacher->face_url = $filename;  //Save image path in DB

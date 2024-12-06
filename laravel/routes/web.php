@@ -48,16 +48,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/management-attendances',[AttendanceController::class,'index'])->name('management-attendances.list');
     Route::get('/management-attendances/{class}/detail/{currentDate}',[AttendanceController::class,'view_detail'])->name('management-attendances.view_detail');
     Route::post('/management-attendances/{class}/status/{currentDate}',[AttendanceController::class,'edit_status_attendance'])->name('management-attendances.edit_status');
-    Route::post('/management-attendances/{class}/confirmed-attendance/{currentDate}',[AttendanceController::class,'confirmed_attendance'])->name('management-attendances.confirmed_attendance');
+    Route::post('/management-attendances/{class}/confirmed-attendance',[AttendanceController::class,'confirmed_attendance'])->name('management-attendances.confirmed_attendance');
 
     Route::get('/management-statistics',[StatisticsController::class,'index'])->name('management-statistics.list');
 
     Route::get('/test-image',[TestController::class,'test_image'])->name('test-image');
-
-    Route::get('/clear-session', function () {
-        session()->forget('success');
-        return redirect()->back();
-    });
 });
 
 

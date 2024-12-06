@@ -125,6 +125,8 @@
                                                                 $punctualityStatus = 0;
                                                             } elseif ($attendance->status == 1) {
                                                                 $punctualityStatus = 1;
+                                                            } elseif ($attendance->status == 2) {
+                                                                $punctualityStatus = null;
                                                             } else {
                                                                 $attendanceTime = \Carbon\Carbon::parse(
                                                                     $attendance->time_in,
@@ -209,7 +211,7 @@
                                         </div>
                                     @endif
                                 </div>
-                                <div class="col-lg-6 text-center text-lg-end pt-2 pt-lg-0">
+                                <div class="col-lg-6 text-center text-lg-end pt-2 pt-lg-0" id="attendance-message">
                                     @if ($confirmed_attendance > 0)
                                         Đã xác nhận điểm danh
                                     @else
@@ -237,22 +239,17 @@
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
                 <div class="modal-body">
-                    <form id="form-confirm-attendance"
-                        action="{{ route('management-attendances.confirmed_attendance', ['class' => $class, 'currentDate' => $currentDate->format('Y-m-d')]) }}"
-                        method="post">
-                        @csrf
-                        <p class="text-center text-warning fs-1 mb-2"><i class="fa-duotone fa-clipboard-check"></i></p>
-                        <p class="text-center">Bạn có chắc về việc điểm danh này là chính xác. Sau khi xác nhận hoặc hết
-                            giờ
-                            điểm danh trạng thái điểm danh sẽ bị khoá.</p>
+                    <p class="text-center text-warning fs-1 mb-2"><i class="fa-duotone fa-clipboard-check"></i></p>
+                    <p class="text-center">Bạn có chắc về việc điểm danh này là chính xác. Sau khi xác nhận hoặc hết
+                        giờ
+                        điểm danh trạng thái điểm danh sẽ bị khoá.</p>
 
-                        <div class="text-center">
-                            <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal"
-                                aria-label="Close">Bỏ qua</button> <button type="button" id="btn-confirm-x"
-                                type="button" class="btn btn-sm btn-warning">Xác
-                                nhận</button>
-                        </div>
-                    </form>
+                    <div class="text-center">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal"
+                            aria-label="Close">Bỏ qua</button> <button id="btn-confirm-x" type="button"
+                            class="btn btn-sm btn-warning" data-bs-dismiss="modal" aria-label="Close">Xác
+                            nhận</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -381,8 +378,83 @@
 
     <script>
         document.getElementById('btn-confirm-x').addEventListener('click', function(event) {
-            // Submit form
-            document.getElementById('form-confirm-attendance').submit();
+
+            let isValid = true;
+            document.querySelectorAll('.form-check-input[type="radio"]').forEach(function(radio) {
+                const studentId = radio.getAttribute('data-student-id');
+
+                if (radio.checked) {
+                    const status = radio.value;
+                    const timeInput = document.querySelector(
+                        `[data-student-id="${studentId}"][type="text"]`);
+
+                    if (status != 2 && timeInput.value.trim() === '') {
+                        isValid = false;
+
+                        const errorMessage = new bootstrap.Toast(document.getElementById('errorMessage'));
+                        errorMessage.show();
+
+                        timeInput.focus();
+
+                        return;
+                    }
+                }
+            });
+
+            if (!isValid) {
+                event.preventDefault();
+            } else {
+                const attendanceData = [];
+                document.querySelectorAll('input[name^="time_in"]').forEach((input) => {
+                    const nameAttribute = input.getAttribute('name');
+                    const regex = /time_in\[(.+?)\]/;
+                    const matches = nameAttribute.match(regex);
+
+                    if (matches) {
+                        const identifier = matches[1];
+                        const studentId = input.dataset.studentId;
+                        const timeIn = input.value;
+
+                        const statusInput = document.querySelector(
+                            `input[name="status[${identifier}]"]:checked`
+                        );
+
+                        const status = statusInput ? statusInput.value : null;
+
+                        attendanceData.push({
+                            student_id: studentId,
+                            identifier: identifier,
+                            time_in: timeIn,
+                            status: status,
+                        });
+                    }
+
+                });
+                const url =
+                    @json(route('management-attendances.confirmed_attendance', ['class' => $class]));
+                fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}', // Laravel CSRF token
+                        },
+                        body: JSON.stringify({
+                            attendance: attendanceData,
+                        }),
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            location.reload();
+                        } else {
+                            console.error('Xác nhận thất bại.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Lỗi kết nối:', error);
+                    });
+            }
+
         });
     </script>
 

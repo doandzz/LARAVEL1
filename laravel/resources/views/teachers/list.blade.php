@@ -68,7 +68,7 @@
                                         class="table table-normal table-hover table-borderless table-simple-responsive table-rollcall sticky-first-column sticky-last-column mb-0">
                                         <thead>
                                             <tr>
-                                                <th><span class="text-truncate">Mã GV</span></th>
+                                                <th><span class="text-truncate">Mã định danh GV</span></th>
                                                 <th><span class="text-truncate">Họ và tên</span></th>
                                                 <th><span class="text-truncate">Liên hệ</span></th>
                                                 <th><span class="text-truncate">Chức danh</span></th>
@@ -86,8 +86,8 @@
                                                     $classes_names = implode(', ', $names);
                                                 @endphp
                                                 <tr class="align-middle">
-                                                    <td data-label="Mã GV">
-                                                        {{ $teacher->teacher_code }}
+                                                    <td data-label="Mã định danh GV">
+                                                        {{ $teacher->identification_code }}
                                                     </td>
                                                     <td data-label="Họ và tên">
                                                         <div class="d-flex align-items-center">

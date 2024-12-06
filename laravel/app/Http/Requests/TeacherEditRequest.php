@@ -30,8 +30,7 @@ class TeacherEditRequest extends FormRequest
         $table = $tenant->code.'_teachers';
         $teacherId = $this->route('teacher')->id;
         return [
-            'identification_code' => ['required','regex:/^[a-zA-Z0-9_]{8,12}$/',Rule::unique($table, 'identification_code')->ignore($teacherId),],
-            'teacher_code' => ['required','regex:/^[a-zA-Z0-9_]{8,12}$/',Rule::unique($table, 'teacher_code')->ignore($teacherId),],
+            'identification_code' => ['required','regex:/^[0-9]{12}$/',Rule::unique($table, 'identification_code')->ignore($teacherId),],
             'full_name' => 'required|regex:/^[a-zA-ZÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠàáâãèéêìíòóôõùúăđĩũơỲỴÝỶỸỳỵýỷỹỤụƯưĂăẰằẮắẲẳẴẵẶặẸẹẺẻẼẽỀềẾếỂểỄễỆệỈỉỊịỌọỎỏỎỏỐốỒồỔổỖỗỘộỚớỜờỞởỠỡỢợỤụỦủỨứỪừỬửỮữỰự\s]+$/',
             'birth_date' => 'required',
             'address' => 'required',
@@ -49,11 +48,8 @@ class TeacherEditRequest extends FormRequest
     {
         return [
             'identification_code.required' => 'Vui lòng nhập mã định danh giáo viên!',
-            'identification_code.regex' => 'Mã định danh phải từ 8-12 ký tự, chỉ bao gồm chữ cái, số và dấu gạch dưới (_)!',
+            'identification_code.regex' => 'Mã định danh phải đủ 12 số!',
             'identification_code.unique' => 'Mã định danh giáo viên đã tồn tại!',
-            'teacher_code.required' => 'Vui lòng nhập mã giáo viên!',
-            'teacher_code.regex' => 'Mã giáo viên phải từ 8-12 ký tự, chỉ bao gồm chữ cái, số và dấu gạch dưới (_)!',
-            'teacher_code.unique' => 'Mã giáo viên đã tồn tại!',
             'full_name.required' => 'Vui lòng nhập tên giáo viên!',
             'full_name.regex' => 'Tên giáo viên chỉ chứa chữ cái!',
             'birth_date.required' => 'Vui lòng chọn ngày sinh!',
