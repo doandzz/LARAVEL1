@@ -17,14 +17,14 @@ class StudentController extends Controller
     {
         if (!Gate::allows('view-admin-dashboard')) {
             $user = Auth::user();
-            
+
             $name_search = $request->input('name_search');
             $class_search = $request->input('class_search');
 
             $custom = $request->input('pageinateData') ?? 10;
             $request->session()->put('custom', $custom);
 
-            $students = Student::when($name_search, function ($queryBuilder) use ($name_search) {
+            $query = Student::when($name_search, function ($queryBuilder) use ($name_search) {
                 $queryBuilder->where('full_name', 'LIKE', "%{$name_search}%");
             })
                 ->when($class_search, function ($queryBuilder) use ($class_search) {
@@ -33,9 +33,12 @@ class StudentController extends Controller
                     }
                 })
                 ->where('status', 1)
-                ->whereIn('class_id',$user->teacher->classes->pluck('id'))
-                ->orderBy('updated_at', 'desc')->paginate($custom)->withQueryString();
-    
+                ->whereIn('class_id', $user->teacher->classes->pluck('id'));
+            
+            $totalStudents = (clone $query)->count();
+
+            $students= $query->orderBy('id', 'asc')->paginate($custom)->withQueryString();
+
             foreach ($students as $data) {
                 $data->gender_str = $data->gender === 1 ? 'Nam' : 'Nữ';
                 $data->birth_date = Carbon::parse($data->birth_date)->format('d/m/Y');
@@ -44,7 +47,7 @@ class StudentController extends Controller
             $is_teacher = true;
             $classes = Classes::get();
 
-            return view('students.list', compact('students', 'classes', 'name_search', 'class_search', 'is_teacher'));
+            return view('students.list', compact('students', 'classes', 'name_search', 'class_search', 'is_teacher', 'totalStudents'));
         }
 
 
@@ -54,8 +57,7 @@ class StudentController extends Controller
         $custom = $request->input('pageinateData') ?? 10;
         $request->session()->put('custom', $custom);
 
-        // $students = Student::where('status', 1)->paginate($custom)->withQueryString();
-        $students = Student::when($name_search, function ($queryBuilder) use ($name_search) {
+        $query = Student::when($name_search, function ($queryBuilder) use ($name_search) {
             $queryBuilder->where('full_name', 'LIKE', "%{$name_search}%");
         })
             ->when($class_search, function ($queryBuilder) use ($class_search) {
@@ -63,7 +65,11 @@ class StudentController extends Controller
                     $queryBuilder->where('class_id', $class_search);
                 }
             })
-            ->where('status', 1)->orderBy('updated_at', 'desc')->paginate($custom)->withQueryString();
+            ->where('status', 1);
+        
+        $totalStudents = (clone $query)->count();
+
+        $students = $query ->orderBy('id', 'asc')->paginate($custom)->withQueryString();
 
         foreach ($students as $data) {
             $data->gender_str = $data->gender === 1 ? 'Nam' : 'Nữ';
@@ -73,7 +79,7 @@ class StudentController extends Controller
         $classes = Classes::get();
         $is_teacher = true;
 
-        return view('students.list', compact('students', 'classes', 'name_search', 'class_search','is_teacher'));
+        return view('students.list', compact('students', 'classes', 'name_search', 'class_search', 'is_teacher', 'totalStudents'));
     }
 
     public function view_create()
@@ -171,6 +177,58 @@ class StudentController extends Controller
         return redirect()->route('management-students.list');
     }
 
+    public function clear_fillter(Request $request)
+    {
+        if (!Gate::allows('view-admin-dashboard')) {
+            $user = Auth::user();
+
+            $name_search = '';
+            $class_search = 0;
+
+            $custom = $request->input('pageinateData') ?? 10;
+            $request->session()->put('custom', $custom);
+
+            $students = Student::where('status', 1)
+                ->whereIn('class_id', $user->teacher->classes->pluck('id'))
+                ->orderBy('id', 'desc')->paginate($custom)->withQueryString();
+
+            foreach ($students as $data) {
+                $data->gender_str = $data->gender === 1 ? 'Nam' : 'Nữ';
+                $data->birth_date = Carbon::parse($data->birth_date)->format('d/m/Y');
+            }
+
+            $is_teacher = true;
+            $classes = Classes::get();
+            $showFilter = true;
+
+            return view('students.list', compact('students', 'classes', 'name_search', 'class_search', 'is_teacher', 'showFilter'));
+        }
+
+
+        $name_search = '';
+        $class_search = 0;
+
+        $custom = $request->input('pageinateData') ?? 10;
+        $request->session()->put('custom', $custom);
+
+        $query = Student::where('status', 1);
+
+        $totalStudents = (clone $query)->count();
+
+        $students = $query ->orderBy('id', 'desc')->paginate($custom)->withQueryString();
+
+        foreach ($students as $data) {
+            $data->gender_str = $data->gender === 1 ? 'Nam' : 'Nữ';
+            $data->birth_date = Carbon::parse($data->birth_date)->format('d/m/Y');
+        }
+
+        $classes = Classes::get();
+        $is_teacher = false;
+        $showFilter = true;
+
+        return view('students.list', compact('students', 'classes', 'name_search', 'class_search', 'is_teacher', 'showFilter','totalStudents'));
+    }
+
 
     public function importStudentPage()
     {
@@ -178,18 +236,12 @@ class StudentController extends Controller
         return view('students.import',  compact('classes'));
     }
 
-    public function importStudents()
-    {
-
-    }
+    public function importStudents() {}
 
     public function exportStudentPage()
     {
         return view('students.export');
     }
 
-    public function exportStudents()
-    {
-        
-    }
+    public function exportStudents() {}
 }

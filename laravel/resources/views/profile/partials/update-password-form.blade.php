@@ -48,13 +48,13 @@
                                     </div>
                                     <div class="row mb-2">
                                         <div class="col-sm-4">
-                                            <span class="opacity-50">Mật khẩu mới</span>
+                                            <span class="opacity-50">Xác nhận mật khẩu</span>
                                         </div>
                                         <div class="col-sm-8">
                                             <input name="password_confirmation" type="password" class="form-control"
                                                 value="{{ old('password_confirmation') }}"
                                                 placeholder="Xác nhận mật khẩu mới">
-                                            @error('password')
+                                            @error('password_confirmation')
                                                 <div class="text-danger">{{ $message }}</div>
                                             @enderror
                                         </div>

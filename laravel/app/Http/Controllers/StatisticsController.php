@@ -2,8 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\Models\Settings_time;
 use App\Models\Classes;
 use App\Models\Student;
 use App\Models\Teacher;

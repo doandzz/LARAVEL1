@@ -24,7 +24,7 @@
                 <form action="{{ route('management-teachers.list') }}" method="get">
                     <div class="row g-2 align-items-end mb-2">
                         <div class="col-sm-2">
-                            <label class="small opacity-50">Mã giáo viên</label>
+                            <label class="small opacity-50">Mã định danh giáo viên</label>
                             <input type="text" name="teacher_code_search" class="form-control form-control-sm"
                                 value="{{ $teacher_code_search ?? '' }}" placeholder="">
                         </div>
@@ -33,13 +33,19 @@
                             <input type="text" name="name_search" class="form-control form-control-sm"
                                 value="{{ $name_search ?? '' }}" placeholder="">
                         </div>
-                        <div class="col-sm-3">
+                        <div class="col-sm-2">
                             <label class="small opacity-50">Chức danh</label>
-                            <select class="form-select form-select-sm">
-                                <option value="0">Giáo viên chủ nhiệm</option>
+                            <select class="form-select form-select-sm" name="role_search">
+                                <option value="0" @if ($role_search == 0) selected @endif>Tất cả</option>
+                                <option value="1" @if ($role_search == 1) selected @endif>Quản trị trường
+                                </option>
+                                <option value="2" @if ($role_search == 2) selected @endif>Giáo viên</option>
                             </select>
                         </div>
-                        <div class="col-sm-2 ms-auto">
+                        <div class="col-sm-2 ms-auto d-flex gap-2">
+                            <button type="button" class="btn btn-sm btn-warning w-100"
+                                onclick="location.href='{{ route('management-teachers.clear_fillter') }}';">Làm
+                                mới</button>
                             <button type="submit" class="btn btn-sm btn-warning w-100">Tìm kiếm</button>
                         </div>
                     </div>
@@ -94,8 +100,7 @@
                                                             <div
                                                                 class="flex-shrink-0 me-md-2 ms-2 ms-md-0 order-2 order-md-1">
                                                                 <img src="{{ $teacher->face_url ? asset('images/' . $teacher->face_url) : asset('assets/img/media/avatar-default.png') }}"
-                                                                    class="w-48px h-48px object-fit-cover rounded"
-                                                                    >
+                                                                    class="w-48px h-48px object-fit-cover rounded">
                                                             </div>
                                                             <div class="flex-grow-1 order-1 order-md-2">
                                                                 <div class="lh-sm">{{ $teacher->full_name }}</div>
@@ -114,9 +119,23 @@
                                                         </div>
                                                     </td>
                                                     <td data-label="Liên hệ">
-                                                        <div class="lh-sm">{{ $classes_names == '' ? 'Giáo viên' : 'Giáo viên chủ nhiệm' }}</div>
-                                                        <div class="lh-sm">Lớp: <strong>{{ $classes_names }}</strong>
-                                                        </div>
+                                                        @if ($classes_names != '')
+                                                            <div class="lh-sm">
+                                                                Giáo viên chủ nhiệm
+                                                            </div>
+                                                            <div class="lh-sm">Lớp: <strong>{{ $classes_names }}</strong>
+                                                            </div>
+                                                        @else
+                                                            @if ($teacher->user && $teacher->user->role == 1)
+                                                                <div class="lh-sm">
+                                                                    Quản trị trường
+                                                                </div>
+                                                            @else
+                                                                <div class="lh-sm">
+                                                                    Giáo viên
+                                                                </div>
+                                                            @endif
+                                                        @endif
                                                     </td>
                                                     <td class="text-end" data-label="Hành động">
                                                         <button class="btn btn-24px btn-outline-danger rounded-circle me-1"
@@ -222,8 +241,13 @@
             }
         });
         document.addEventListener('DOMContentLoaded', function() {
-            @if (request()->has('name_search') || request()->has('teacher_code_search'))
+            @if (request()->has('name_search') || request()->has('teacher_code_search') || request()->has('role_search'))
                 // Open search box after search
+                const searchBox = new bootstrap.Collapse(document.getElementById('searchBox'), {
+                    toggle: true
+                });
+            @endif
+            @if (isset($showFilter) && $showFilter)
                 const searchBox = new bootstrap.Collapse(document.getElementById('searchBox'), {
                     toggle: true
                 });

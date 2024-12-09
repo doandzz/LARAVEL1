@@ -13,48 +13,66 @@ class ClassController extends Controller
 {
     public function index(Request $request)
     {
+        $name_search = $request->input('name_search');
+        $grade_search = $request->input('grade_search', 0);
 
         $custom = $request->input('pageinateData') ?? 10;
         $request->session()->put('custom', $custom);
 
-        $classes = Classes::where('status', 1)->paginate($custom)->withQueryString();
+        $classes = Classes::when($name_search, function ($query) use ($name_search) {
+            $query->whereHas('teacher', function ($teacherQuery) use ($name_search) {
+                $teacherQuery->where('full_name', 'LIKE', "%{$name_search}%");
+            });
+        })
+            ->when($grade_search, function ($queryBuilder) use ($grade_search) {
+                if ($grade_search != 0) {
+                    $queryBuilder->where('name', 'LIKE', "{$grade_search}%");
+                }
+            })
+            ->where('status', 1)->orderBy('id', 'desc')->paginate($custom)->withQueryString();
 
         $years = Year::get();
         $teachers = Teacher::get();
 
-        return view('classes.list', ['classes' => $classes, 'years' => $years,'teachers' => $teachers]);
+        return view('classes.list', [
+            'classes' => $classes,
+            'years' => $years,
+            'teachers' => $teachers,
+            'name_search' => $name_search,
+            'grade_search' => $grade_search
+        ]);
     }
 
     public function view_edit(Classes $class, Request $request)
-    {   
+    {
         $custom = $request->input('pageinateData') ?? 10;
         $request->session()->put('custom', $custom);
 
         $classes = Classes::paginate($custom)->withQueryString();
         $years = Year::get();
         $teachers = Teacher::get();
-        $classname= $class -> name;
+        $classname = $class->name;
 
-        return view('classes.list', compact('classes', 'class', 'years','teachers','classname'));
+        return view('classes.list', compact('classes', 'class', 'years', 'teachers', 'classname'));
     }
 
     public function edit(ClassEditRequest $request, Classes $class)
     {
-        
+
         $validatedData = $request->validated();
-        $class -> name = $validatedData['name'];
-        $class -> year_id = $validatedData['year_id'];
-        $class -> teacher_id = $validatedData['teacher_id'];
+        $class->name = $validatedData['name'];
+        $class->year_id = $validatedData['year_id'];
+        $class->teacher_id = $validatedData['teacher_id'];
 
         $class->update();
-        
+
         // Flash message
-        session()->flash('success','Thông tin đã được cập nhật');
+        session()->flash('success', 'Thông tin đã được cập nhật');
 
         return redirect()->route('management-classes.list');
     }
     public function view_create(Request $request)
-    {   
+    {
         $custom = $request->input('pageinateData') ?? 10;
         $request->session()->put('custom', $custom);
 
@@ -66,22 +84,22 @@ class ClassController extends Controller
         // Remove 'class' object from session
         $request->session()->forget('class');
 
-        return view('classes.list', ['classes' => $classes, 'years' => $years,'teachers' => $teachers]);
+        return view('classes.list', ['classes' => $classes, 'years' => $years, 'teachers' => $teachers]);
     }
     public function create(ClassCreateRequest $request)
     {
         $class = new Classes();
         $validatedData = $request->validated();
 
-        $class -> name = $validatedData['name'];
-        $class -> year_id = $validatedData['year_id'];
-        $class -> teacher_id = $validatedData['teacher_id'];
-        $class -> status = 1;
+        $class->name = $validatedData['name'];
+        $class->year_id = $validatedData['year_id'];
+        $class->teacher_id = $validatedData['teacher_id'];
+        $class->status = 1;
 
         $class->save();
-        
+
         // Flash message
-        session()->flash('success','Thêm lớp học thành công');
+        session()->flash('success', 'Thêm lớp học thành công');
 
         return redirect()->route('management-classes.list');
     }
@@ -91,7 +109,29 @@ class ClassController extends Controller
         $class->status = 0;
         $class->save();
         // Flash message
-        session()->flash('success','Xóa lớp học thành công');
+        session()->flash('success', 'Xóa lớp học thành công');
         return redirect()->route('management-classes.list');
+    }
+    public function clear_fillter(Request $request)
+    {
+        $name_search = '';
+        $grade_search = 0;
+
+        $custom = $request->input('pageinateData') ?? 10;
+        $request->session()->put('custom', $custom);
+
+        $classes = Classes::where('status', 1)->orderBy('id', 'desc')->paginate($custom)->withQueryString();
+
+        $years = Year::get();
+        $teachers = Teacher::get();
+
+        return view('classes.list', [
+            'classes' => $classes,
+            'years' => $years,
+            'teachers' => $teachers,
+            'name_search' => $name_search,
+            'grade_search' => $grade_search,
+            'showFilter' => true
+        ]);
     }
 }

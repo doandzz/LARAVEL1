@@ -38,7 +38,7 @@ class SettingsController extends Controller
             }
         }
         // Flash message
-        session()->flash('success', 'Thông tin đã được lưu');
+        session()->flash('success', 'Cấu hình đã được lưu!');
 
         return redirect()->route('management-settings.list');
     }

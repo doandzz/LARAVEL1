@@ -4,12 +4,51 @@
 @section('page-header')
     <!-- BEGIN Page Header -->
     <div class="page-header py-3 flex-shrink-0">
-        <div class="container-fluid">
-            <div class="row align-items-end">
-                <div class="col-lg-8">
-                    <h3 class="mb-0">Quản lý lớp học</h3>
+        <div class="container-fluid pt-3 pb-2">
+            <div class="d-flex align-items-end mb-2">
+                <h3 class="page-title flex-grow-1 d-flex align-items-center mb-0">Quản lý lớp học</h3>
+                <div class="flex-shrink-0 ms-auto">
+                    <a class="btn btn-sm btn-none btn-filter text-secondary me-1" data-bs-toggle="collapse" href="#searchBox"
+                        role="button" aria-expanded="false" aria-controls="searchBox">
+                        <i class="fa-solid fa-filter-list"></i>
+                    </a>
+                    {{-- <button class="btn btn-sm btn-warning"
+                        onclick="location.href='{{ route('management-students.view_create') }}';"><i
+                            class="fa-regular fa-plus"></i><span class="ms-2 d-none d-sm-inline-block">Thêm
+                            mới</span></button> --}}
                 </div>
             </div>
+
+            <form action="{{ route('management-classes.list') }}" method="GET">
+                <!-- BEGIN Search Box -->
+                <div class="searchbox py-2 px-3 bg-white border rounded shadow-sm collapse" id="searchBox">
+                    <div class="row g-2 align-items-end mb-2">
+                        <div class="col-sm-2">
+                            <label class="small opacity-50">Khối</label>
+                            <select id="filter_class" class="form-select form-select-sm" name="grade_search">
+                                <option value="0" @if ($grade_search == 0) selected @endif>Chọn khối</option>
+                                <option value="1" @if ($grade_search == 1) selected @endif>Khối 1</option>
+                                <option value="2" @if ($grade_search == 2) selected @endif>Khối 2</option>
+                                <option value="3" @if ($grade_search == 3) selected @endif>Khối 3</option>
+                                <option value="4" @if ($grade_search == 4) selected @endif>Khối 4</option>
+                                <option value="5" @if ($grade_search == 5) selected @endif>Khối 5</option>
+                            </select>
+                        </div>
+                        <div class="col-sm-4">
+                            <label class="small opacity-50">Giáo viên chủ nhiệm</label>
+                            <input type="text" name="name_search" class="form-control form-control-sm"
+                                value="{{ $name_search ?? '' }}">
+                        </div>
+                        <div class="col-sm-2 ms-auto d-flex gap-2">
+                            <button type="button" class="btn btn-sm btn-warning w-100"
+                                onclick="location.href='{{ route('management-classes.clear_fillter') }}';">Làm
+                                mới</button>
+                            <button type="submit" class="btn btn-sm btn-warning w-100">Tìm kiếm</button>
+                        </div>
+                    </div>
+                </div>
+                <!-- END Search Box-->
+            </form>
         </div>
     </div><!-- END Page Header-->
 @endsection
@@ -130,7 +169,8 @@
                                                             role="button"
                                                             class="btn btn-24px btn-outline-info rounded-circle me-1">
                                                             <i class="fa-solid fa-plus" data-bs-toggle="tooltip"
-                                                                data-bs-placement="right" data-bs-title="Thêm học sinh"></i>
+                                                                data-bs-placement="right"
+                                                                data-bs-title="Thêm học sinh"></i>
                                                         </a>
 
                                                         <button class="btn btn-24px btn-outline-danger rounded-circle me-1"
@@ -257,7 +297,12 @@
         </div>
     </div><!-- END Container -->
     <!-- BEGIN Only for this page  -->
-
+    <style>
+        .btn-filter[aria-expanded=true] {
+            color: var(--bs-warning) !important;
+        }
+    </style>
+    
     <script>
         //Menu Active
         document.querySelector('.item-group-student > .nav-link').setAttribute('aria-expanded', true);
@@ -281,6 +326,19 @@
                 selectedtext: ''
             });
         });
+        document.addEventListener('DOMContentLoaded', function() {
+            @if (request()->has('name_search') || request()->has('grade_search'))
+                // Open search box after search
+                const searchBox = new bootstrap.Collapse(document.getElementById('searchBox'), {
+                    toggle: true
+                });
+            @endif
+            @if (isset($showFilter) && $showFilter)
+                const searchBox = new bootstrap.Collapse(document.getElementById('searchBox'), {
+                    toggle: true
+                });
+            @endif
+        });
         document.getElementById('btn-confirm-edit').addEventListener('click', function() {
             // Close modal
             var modal = bootstrap.Modal.getInstance(document.getElementById('modalConfirmEdit'));
@@ -301,7 +359,6 @@
         document.addEventListener("DOMContentLoaded", function() {
 
             var session = @json(session('success'));
-
             if (session) {
                 var message = new bootstrap.Toast(document.getElementById('Message'));
                 message.show();

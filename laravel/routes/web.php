@@ -25,6 +25,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/management-students/{student}',[StudentController::class,'edit'])->name('management-students.edit');
     Route::get('/management-students/create',[StudentController::class,'view_create'])->name('management-students.view_create');
     Route::post('/management-student/create',[StudentController::class,'create'])->name('management-students.create');
+    Route::get('/management-students/clear-fillter',[StudentController::class,'clear_fillter'])->name('management-students.clear_fillter');
     Route::get('/management-student/import',[StudentController::class,'importStudentPage'])->name('management-students.import');
     Route::get('/management-student/export',[StudentController::class,'exportStudentPage'])->name('management-students.export');
 
@@ -34,6 +35,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/management-classes/create', [ClassController::class, 'view_create'])->name('management-classes.view_create');
     Route::post('/management-class/create', [ClassController::class, 'create'])->name('management-classes.create');
     Route::get('/management-classes/{class}/delete',[ClassController::class,'delete'])->name('management-classes.delete');
+    Route::get('/management-classes/clear-fillter',[ClassController::class,'clear_fillter'])->name('management-classes.clear_fillter');
     
     Route::get('/management-teachers',[TeacherController::class,'list'])->name('management-teachers.list');
     Route::get('/management-teachers/{teacher}/edit',[TeacherController::class,'view_edit'])->name('management-teachers.view_edit');
@@ -41,6 +43,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/management-teachers/{teacher}',[TeacherController::class,'edit'])->name('management-teachers.edit');
     Route::get('/management-teachers/create',[TeacherController::class,'view_create'])->name('management-teachers.view_create');
     Route::post('/management-teacher/create',[TeacherController::class,'create'])->name('management-teachers.create');
+    Route::get('/management-teachers/clear-fillter',[TeacherController::class,'clear_fillter'])->name('management-teachers.clear_fillter');
 
     Route::get('/management-settings',[SettingsController::class,'index'])->name('management-settings.list');
     Route::post('/management-settings/update',[SettingsController::class,'update'])->name('management-settings.update');

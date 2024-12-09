@@ -39,7 +39,10 @@
                             <input type="text" name="name_search" class="form-control form-control-sm"
                                 value="{{ $name_search ?? '' }}" placeholder="">
                         </div>
-                        <div class="col-sm-2 ms-auto">
+                        <div class="col-sm-2 ms-auto d-flex gap-2">
+                            <button type="button" class="btn btn-sm btn-warning w-100"
+                                onclick="location.href='{{ route('management-students.clear_fillter') }}';">Làm
+                                mới</button>
                             <button type="submit" class="btn btn-sm btn-warning w-100">Tìm kiếm</button>
                         </div>
                     </div>
@@ -68,7 +71,7 @@
                                         class="table table-normal table-hover table-borderless table-simple-responsive table-rollcall sticky-first-column sticky-last-column mb-0">
                                         <thead>
                                             <tr>
-                                                <th><span class="text-truncate">Mã học sinh</span></th>
+                                                <th><span class="text-truncate">Mã định danh học sinh</span></th>
                                                 <th><span class="text-truncate">Họ và tên</span></th>
                                                 <th><span class="text-truncate">Liên lạc</span></th>
                                                 <th><span class="text-truncate">Lớp</span></th>
@@ -79,8 +82,8 @@
                                         <tbody>
                                             @foreach ($students as $student)
                                                 <tr class="align-middle">
-                                                    <td data-label="Mã học sinh">
-                                                        {{ $student->student_code }}
+                                                    <td data-label="Mã định danh học sinh">
+                                                        {{ $student->student_identification_code }}
                                                     </td>
                                                     <td data-label="Họ và tên">
                                                         <div class="d-flex align-items-center">
@@ -131,12 +134,11 @@
                                     </table>
                                 </div>
                             </div>
-                            <div class="row g-0 d-flex align-items-center border-top pt-2 mt-2">
-                                <div class="col-lg-6">
-                                    <div class="d-flex align-items-center">
-                                    </div>
+                            <div class="g-0 d-flex justify-content-end align-items-center border-top pt-2 mt-2">
+                                <div>
+                                    {{ $totalStudents . ' học sinh' }}
                                 </div>
-                                <div class="col-lg-6">
+                                <div class="ms-2">
                                     {{ $students->links('pagination.custom') }}
                                 </div>
                             </div>
@@ -197,6 +199,11 @@
             </div>
         </div>
     </div><!-- END Container -->
+    <style>
+        .btn-filter[aria-expanded=true] {
+            color: var(--bs-warning) !important;
+        }
+    </style>
 
     <script>
         //Menu Active
@@ -217,6 +224,11 @@
         document.addEventListener('DOMContentLoaded', function() {
             @if (request()->has('name_search') || request()->has('class_search'))
                 // Open search box after search
+                const searchBox = new bootstrap.Collapse(document.getElementById('searchBox'), {
+                    toggle: true
+                });
+            @endif
+            @if (isset($showFilter) && $showFilter)
                 const searchBox = new bootstrap.Collapse(document.getElementById('searchBox'), {
                     toggle: true
                 });
