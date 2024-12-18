@@ -10,6 +10,8 @@ use App\Http\Requests\TeacherEditRequest;
 use App\Http\Requests\TeacherCreateRequest;
 use Illuminate\Support\Facades\Auth;
 
+use function PHPUnit\Framework\isNull;
+
 class TeacherController extends Controller
 {
     public function list(Request $request)
@@ -45,7 +47,9 @@ class TeacherController extends Controller
 
         foreach ($teachers as $data) {
             $data->gender_str = $data->gender === 1 ? 'Nam' : 'Nữ';
-            $data->birth_date = Carbon::parse($data->birth_date)->format('d/m/Y');
+            if(!isNull($data->birth_date)){
+                $data->birth_date = Carbon::parse($data->birth_date)->format('d/m/Y');
+            } 
         }
 
         return view('teachers.list', compact('teachers', 'teacher_code_search', 'name_search', 'role_search'));

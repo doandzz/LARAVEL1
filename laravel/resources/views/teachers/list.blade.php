@@ -105,7 +105,7 @@
                                                             <div class="flex-grow-1 order-1 order-md-2">
                                                                 <div class="lh-sm">{{ $teacher->full_name }}</div>
                                                                 <div class="lh-sm small opacity-50">
-                                                                    {{ $teacher->gender_str }} - {{ $teacher->birth_date }}
+                                                                    {{ $teacher->gender_str }} {{ $teacher->birth_date ? ' - ' . $teacher->birth_date : '' }}
                                                                 </div>
                                                             </div>
                                                         </div>

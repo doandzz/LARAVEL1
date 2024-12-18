@@ -378,7 +378,6 @@
 
     <script>
         document.getElementById('btn-confirm-x').addEventListener('click', function(event) {
-
             let isValid = true;
             document.querySelectorAll('.form-check-input[type="radio"]').forEach(function(radio) {
                 const studentId = radio.getAttribute('data-student-id');
@@ -404,55 +403,11 @@
             if (!isValid) {
                 event.preventDefault();
             } else {
-                const attendanceData = [];
-                document.querySelectorAll('input[name^="time_in"]').forEach((input) => {
-                    const nameAttribute = input.getAttribute('name');
-                    const regex = /time_in\[(.+?)\]/;
-                    const matches = nameAttribute.match(regex);
-
-                    if (matches) {
-                        const identifier = matches[1];
-                        const studentId = input.dataset.studentId;
-                        const timeIn = input.value;
-
-                        const statusInput = document.querySelector(
-                            `input[name="status[${identifier}]"]:checked`
-                        );
-
-                        const status = statusInput ? statusInput.value : null;
-
-                        attendanceData.push({
-                            student_id: studentId,
-                            identifier: identifier,
-                            time_in: timeIn,
-                            status: status,
-                        });
-                    }
-
-                });
                 const url =
-                    @json(route('management-attendances.confirmed_attendance', ['class' => $class]));
-                fetch(url, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}', // Laravel CSRF token
-                        },
-                        body: JSON.stringify({
-                            attendance: attendanceData,
-                        }),
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            location.reload();
-                        } else {
-                            console.error('Xác nhận thất bại.');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Lỗi kết nối:', error);
-                    });
+                    '{{ route('management-attendances.confirmed_attendance', ['class' => $class, 'currentDate' => $currentDate->format('Y-m-d')]) }}';
+                const form = document.getElementById('edit-status');
+                form.action = url;
+                form.submit();
             }
 
         });

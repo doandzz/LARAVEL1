@@ -246,57 +246,62 @@ class AttendanceController extends Controller
             'currentDate' => $currentDate->format('Y-m-d')
         ]);
     }
-    public function confirmed_attendance(Classes $class, Request $request)
+    public function confirmed_attendance(Classes $class, $currentDate, Request $request)
     {
+        $timeInData = $request->input('time_in', []);
+        $statusData = $request->input('status', []);
         $userId = Auth::id();
-        try {
-            $attendanceData = $request->input('attendance');
 
-            foreach ($attendanceData as $data) {
-                if (str_starts_with($data['identifier'], 'new-')) {
-                    $attendance = new Attendance();
+        foreach ($statusData as $key => $status) {
 
-                    $time_In = $data['time_in'] ?? null;
+            if (str_starts_with($key, 'new') && $status != 2) {
+                $studentId = str_replace('new-', '', $key);
+                $time_In = $timeInData[$key] ?? null;
+                if ($time_In) {
+                    $now = Carbon::now()->setTimezone('Asia/Ho_Chi_Minh')->format('Y-m-d');
+                    $time_In = Carbon::createFromFormat('Y-m-d H:i', $now . ' ' . $time_In);
+                }
+
+                $attendance = new Attendance();
+
+                $attendance->student_id = $studentId;
+                $attendance->class_id = $class->id;
+                $attendance->time_in = $time_In;
+                $attendance->user_id = $userId;
+                $attendance->type = 0;
+                $attendance->status = $status;
+                $attendance->save();
+            } else {
+                $attendance = Attendance::find($key);
+
+                if ($attendance) {
+                    $time_In = $timeInData[$key] ?? null;
                     if ($time_In) {
                         $now = Carbon::now()->setTimezone('Asia/Ho_Chi_Minh')->format('Y-m-d');
                         $time_In = Carbon::createFromFormat('Y-m-d H:i', $now . ' ' . $time_In);
                     }
-                    $attendance->student_id = $data['student_id'];
-                    $attendance->class_id = $class->id;
-                    $attendance->time_in = $time_In;
+                    $attendance->status = $status;
                     $attendance->user_id = $userId;
-                    $attendance->type = 0;
-                    $attendance->status = $data['status'];
+                    $attendance->time_in = $time_In;
                     $attendance->save();
-                } else {
-                    $attendance = Attendance::find($data['identifier']);
-
-                    if ($attendance) {
-                        $time_In = $data['time_in'] ?? null;
-                        if ($time_In) {
-                            $now = Carbon::now()->setTimezone('Asia/Ho_Chi_Minh')->format('Y-m-d');
-                            $time_In = Carbon::createFromFormat('Y-m-d H:i', $now . ' ' . $time_In);
-                        }
-                        $attendance->status = $data['status'];
-                        $attendance->user_id = $userId;
-                        $attendance->time_in = $time_In;
-                        $attendance->save();
-                    }
                 }
             }
-
-            $confirmed_attendance = new Confirmed_attendance();
-
-            $confirmed_attendance->user_id = $userId;
-            $confirmed_attendance->class_id = $class->id;
-            $confirmed_attendance->confirmation_time = Carbon::now()->setTimezone('Asia/Ho_Chi_Minh');
-
-            $confirmed_attendance->save();
-            session()->flash('success', 'Điểm danh đã được xác nhận!');
-
-            return response()->json(['success' => true, 'message' => 'Đã xác nhận']);
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Xác nhận lỗi'], 500);
         }
+        $currentDate = Carbon::createFromFormat('Y-m-d', $currentDate);
+        session()->flash('success', 'Điểm danh đã được xác nhận!');
+
+        $confirmed_attendance = new Confirmed_attendance();
+
+        $confirmed_attendance->user_id = $userId;
+        $confirmed_attendance->class_id = $class->id;
+        $confirmed_attendance->confirmation_time = Carbon::now()->setTimezone('Asia/Ho_Chi_Minh');
+
+        $confirmed_attendance->save();
+        session()->flash('success', 'Điểm danh đã được xác nhận!');
+
+        return redirect()->route('management-attendances.view_detail', [
+            'class' => $class,
+            'currentDate' => $currentDate->format('Y-m-d')
+        ]);
     }
 }

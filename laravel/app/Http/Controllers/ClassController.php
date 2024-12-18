@@ -9,12 +9,16 @@ use App\Http\Requests\ClassEditRequest;
 use App\Http\Requests\ClassCreateRequest;
 use Illuminate\Http\Request;
 
+use function PHPUnit\Framework\isNull;
+
 class ClassController extends Controller
 {
     public function index(Request $request)
     {
         $name_search = $request->input('name_search');
         $grade_search = $request->input('grade_search', 0);
+        $request->session()->put('name_search', $name_search);
+        $request->session()->put('grade_search', $grade_search);
 
         $custom = $request->input('pageinateData') ?? 10;
         $request->session()->put('custom', $custom);
@@ -45,15 +49,33 @@ class ClassController extends Controller
 
     public function view_edit(Classes $class, Request $request)
     {
+        $name_search = $request->session()->get('name_search');
+        $grade_search = $request->session()->get('grade_search');
+        $showFilter = true;
+        if (isNull($name_search) && $grade_search == 0) {
+            $showFilter = false;
+        }
+
         $custom = $request->input('pageinateData') ?? 10;
         $request->session()->put('custom', $custom);
 
-        $classes = Classes::paginate($custom)->withQueryString();
+        $classes = Classes::when($name_search, function ($query) use ($name_search) {
+            $query->whereHas('teacher', function ($teacherQuery) use ($name_search) {
+                $teacherQuery->where('full_name', 'LIKE', "%{$name_search}%");
+            });
+        })
+            ->when($grade_search, function ($queryBuilder) use ($grade_search) {
+                if ($grade_search != 0) {
+                    $queryBuilder->where('name', 'LIKE', "{$grade_search}%");
+                }
+            })
+            ->where('status', 1)->orderBy('id', 'desc')->paginate($custom)->withQueryString();
         $years = Year::get();
         $teachers = Teacher::get();
         $classname = $class->name;
 
-        return view('classes.list', compact('classes', 'class', 'years', 'teachers', 'classname'));
+        return view('classes.list', compact('classes', 'class', 'years', 'teachers', 'classname', 'name_search', 'grade_search', 'showFilter'));
+
     }
 
     public function edit(ClassEditRequest $request, Classes $class)
@@ -67,16 +89,33 @@ class ClassController extends Controller
         $class->update();
 
         // Flash message
-        session()->flash('success', 'Thông tin đã được cập nhật');
+        session()->flash('success', 'Thông tin đã được cập nhật!');
 
         return redirect()->route('management-classes.list');
     }
     public function view_create(Request $request)
     {
+        $name_search = $request->session()->get('name_search');
+        $grade_search = $request->session()->get('grade_search');
+        $showFilter = true;
+        if (isNull($name_search) && $grade_search == 0) {
+            $showFilter = false;
+        }
+
         $custom = $request->input('pageinateData') ?? 10;
         $request->session()->put('custom', $custom);
 
-        $classes = Classes::paginate($custom)->withQueryString();
+        $classes = Classes::when($name_search, function ($query) use ($name_search) {
+            $query->whereHas('teacher', function ($teacherQuery) use ($name_search) {
+                $teacherQuery->where('full_name', 'LIKE', "%{$name_search}%");
+            });
+        })
+            ->when($grade_search, function ($queryBuilder) use ($grade_search) {
+                if ($grade_search != 0) {
+                    $queryBuilder->where('name', 'LIKE', "{$grade_search}%");
+                }
+            })
+            ->where('status', 1)->orderBy('id', 'desc')->paginate($custom)->withQueryString();
 
         $years = Year::get();
         $teachers = Teacher::get();
@@ -84,7 +123,7 @@ class ClassController extends Controller
         // Remove 'class' object from session
         $request->session()->forget('class');
 
-        return view('classes.list', ['classes' => $classes, 'years' => $years, 'teachers' => $teachers]);
+        return view('classes.list', compact('classes', 'years', 'teachers', 'name_search', 'grade_search', 'showFilter'));
     }
     public function create(ClassCreateRequest $request)
     {
@@ -99,7 +138,7 @@ class ClassController extends Controller
         $class->save();
 
         // Flash message
-        session()->flash('success', 'Thêm lớp học thành công');
+        session()->flash('success', 'Thêm lớp học thành công!');
 
         return redirect()->route('management-classes.list');
     }
@@ -109,13 +148,14 @@ class ClassController extends Controller
         $class->status = 0;
         $class->save();
         // Flash message
-        session()->flash('success', 'Xóa lớp học thành công');
+        session()->flash('success', 'Xóa lớp học thành công!');
         return redirect()->route('management-classes.list');
     }
     public function clear_fillter(Request $request)
     {
         $name_search = '';
         $grade_search = 0;
+        $request->session()->forget(['name_search', 'grade_search']);
 
         $custom = $request->input('pageinateData') ?? 10;
         $request->session()->put('custom', $custom);
